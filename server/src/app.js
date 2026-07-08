@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+
 const authRoutes = require('./modules/auth');
+const patientRoutes = require('./modules/patient');
+
 const errorHandler = require('./middleware/error.middleware');
 const AppError = require('./utils/AppError');
 
@@ -23,6 +26,7 @@ app.get('/api/v1/health', (req, res) => {
 });
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/patients', patientRoutes);
 
 app.use((req, res, next) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404));
