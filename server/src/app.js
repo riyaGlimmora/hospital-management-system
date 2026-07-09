@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const authRoutes = require('./modules/auth');
-const patientRoutes = require('./modules/patient');
 const doctorRoutes = require('./modules/doctors');
 const appointmentRoutes = require('./modules/appointments');
 const billingRoutes = require('./modules/billing');
+const patientRoutes = require('./modules/patient');
+const dashboardRoutes = require('./modules/dashboard');
 const errorHandler = require('./middleware/error.middleware');
 const AppError = require('./utils/AppError');
 
@@ -26,12 +27,13 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
-
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/patients', patientRoutes);
 app.use('/api/v1/doctors', doctorRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
 app.use('/api/v1/billing', billingRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/patient', patientRoutes);
+
 
 app.use((req, res, next) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404));
