@@ -1,5 +1,8 @@
 const billingModel = require('./billing.model');
+const appointmentModel = require('../appointments/appointment.model');
 const AppError = require('../../utils/AppError');
+
+const BILLABLE_APPOINTMENT_STATUSES = ['checked_in', 'completed'];
 
 function toBillDto(row) {
   return {
@@ -41,11 +44,35 @@ function buildPaginationMeta({ page, limit, total }) {
 }
 
 async function createBill(data) {
-  const bill = await billingModel.createBill({
-    ...data,
-    paymentMethod: normalizePaymentMethod(data.paymentMethod),
-  });
-  return toBillDto(bill);
+  const appointment = await appointmentModel.getAppointmentById(data.appointmentId);
+  if (!appointment) {
+    throw new AppError('Appointment not found', 404);
+  }
+
+  if (!BILLABLE_APPOINTMENT_STATUSES.includes(appointment.status)) {
+    throw new AppError(
+      'A bill can only be generated once the appointment is checked-in or completed',
+      409
+    );
+  }
+
+  const existingBill = await billingModel.getBillByAppointmentId(data.appointmentId);
+  if (existingBill) {
+    throw new AppError('A bill has already been generated for this appointment', 409);
+  }
+
+  try {
+    const bill = await billingModel.createBill({
+      ...data,
+      paymentMethod: normalizePaymentMethod(data.paymentMethod),
+    });
+    return toBillDto(bill);
+  } catch (error) {
+    if (error.code === '23505') {
+      throw new AppError('A bill has already been generated for this appointment', 409);
+    }
+    throw error;
+  }
 }
 
 async function getBill(id) {

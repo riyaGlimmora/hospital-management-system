@@ -71,6 +71,16 @@ async function getBillByBillNumber(billNumber) {
   return rows[0] ?? null;
 }
 
+async function getBillByAppointmentId(appointmentId) {
+  const query = `
+    SELECT ${BILLING_COLUMNS}
+    FROM billing
+    WHERE appointment_id = $1
+  `;
+  const { rows } = await db.query(query, [appointmentId]);
+  return rows[0] ?? null;
+}
+
 async function updateBill(id, fields) {
   const setClauses = [];
   const values = [];
@@ -186,6 +196,7 @@ module.exports = {
   createBill,
   getBillById,
   getBillByBillNumber,
+  getBillByAppointmentId,
   updateBill,
   updatePaymentStatus,
   listBills,
