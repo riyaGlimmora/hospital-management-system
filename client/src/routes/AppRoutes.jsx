@@ -7,17 +7,12 @@ import PatientList from '../pages/patients/PatientList';
 import AddPatient from '../pages/patients/AddPatient';
 import EditPatient from '../pages/patients/EditPatient';
 import PatientDetails from '../pages/patients/PatientDetails';
-
-function ComingSoon({ title }) {
-  return (
-    <div className="flex h-full min-h-[60vh] flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white">
-      <p className="font-['Manrope',sans-serif] text-lg font-semibold text-slate-700">
-        {title}
-      </p>
-      <p className="mt-1 text-sm text-slate-400">This page is coming soon.</p>
-    </div>
-  );
-}
+import DoctorList from '../pages/doctors/DoctorList';
+import AddDoctor from '../pages/doctors/AddDoctor';
+import EditDoctor from '../pages/doctors/EditDoctor';
+import DoctorDetails from '../pages/doctors/DoctorDetails';
+import AppointmentList from '../pages/appointments/AppointmentList';
+import BillingList from '../pages/billing/BillingList';
 
 export default function AppRoutes() {
   return (
@@ -28,13 +23,20 @@ export default function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+
           <Route path="/patients" element={<PatientList />} />
           <Route path="/patients/new" element={<AddPatient />} />
           <Route path="/patients/:id" element={<PatientDetails />} />
           <Route path="/patients/:id/edit" element={<EditPatient />} />
-          <Route path="/doctors" element={<ComingSoon title="Doctors" />} />
-          <Route path="/appointments" element={<ComingSoon title="Appointments" />} />
-          <Route path="/billing" element={<ComingSoon title="Billing" />} />
+
+          <Route path="/doctors" element={<DoctorList />} />
+          <Route path="/doctors/new" element={<AddDoctor />} />
+          <Route path="/doctors/:id" element={<DoctorDetails />} />
+          <Route path="/doctors/:id/edit" element={<EditDoctor />} />
+
+          <Route path="/appointments" element={<AppointmentList />} />
+
+          <Route path="/billing" element={<BillingList />} />
         </Route>
       </Route>
 
