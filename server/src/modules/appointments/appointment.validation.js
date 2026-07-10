@@ -5,10 +5,23 @@ const DURATIONS = [15, 30, 45, 60];
 const PRIORITIES = ['normal', 'urgent', 'emergency'];
 const STATUSES = ['scheduled', 'checked_in', 'completed', 'cancelled'];
 
+function notInThePast(value, helpers) {
+  const today = new Date();
+  const todayDateOnly = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  if (value < todayDateOnly) {
+    return helpers.error('date.pastNotAllowed');
+  }
+  return value;
+}
+
+const appointmentDateValidator = Joi.date().iso().custom(notInThePast).messages({
+  'date.pastNotAllowed': 'Appointment date cannot be in the past',
+});
+
 const createAppointmentSchema = Joi.object({
   patientId: Joi.string().uuid().required(),
   doctorId: Joi.string().uuid().required(),
-  appointmentDate: Joi.date().iso().required(),
+  appointmentDate: appointmentDateValidator.required(),
   startTime: Joi.string().pattern(TIME_REGEX).required().messages({
     'string.pattern.base': 'Start time must be in HH:mm format',
   }),
@@ -21,7 +34,7 @@ const createAppointmentSchema = Joi.object({
 });
 
 const updateAppointmentSchema = Joi.object({
-  appointmentDate: Joi.date().iso().optional(),
+  appointmentDate: appointmentDateValidator.optional(),
   startTime: Joi.string().pattern(TIME_REGEX).optional().messages({
     'string.pattern.base': 'Start time must be in HH:mm format',
   }),
