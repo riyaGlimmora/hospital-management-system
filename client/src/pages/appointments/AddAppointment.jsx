@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
 import { createAppointment } from '../../api/appointmentApi';
-import { getPatients } from '../../api/patientAPi';
+import { getPatients } from '../../api/patientApi';
 import { getDoctors } from '../../api/doctorApi';
 
 const DURATIONS = [15, 30, 45, 60];

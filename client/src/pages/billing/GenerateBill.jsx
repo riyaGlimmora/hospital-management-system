@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { createBill } from '../../api/billingAPi';
+import { createBill } from '../../api/billingApi';
 import { getPatients } from '../../api/patientApi';
 import { getDoctors } from '../../api/doctorApi';
 import { getAppointments } from '../../api/appointmentApi';
