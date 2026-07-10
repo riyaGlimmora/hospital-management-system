@@ -1,20 +1,14 @@
-const Billing = () => {
-  return (
-    <div>
-      <h1 className="font-[Manrope] font-bold text-2xl text-[#0B3B39]">
-        Billing
-      </h1>
-      <p className="font-[Inter] text-sm text-gray-500 mt-1">
-        Billing and invoices will be managed here.
-      </p>
-    </div>
-  );
-};
-
-export default Billing;import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, AlertCircle, RefreshCw, Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getBills } from '../../api/billingApi';
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Plus,
+  AlertCircle,
+  RefreshCw,
+  Receipt,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { getBills } from "../../api/billingApi";
 
 const PAGE_SIZE = 10;
 
