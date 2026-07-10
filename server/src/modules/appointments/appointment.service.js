@@ -1,5 +1,8 @@
 const appointmentModel = require('./appointment.model');
+const doctorModel = require('../doctors/doctor.model');
 const AppError = require('../../utils/AppError');
+
+const DAY_ABBREVIATIONS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function toAppointmentDto(row) {
   return {
@@ -27,6 +30,40 @@ function buildPaginationMeta({ page, limit, total }) {
   };
 }
 
+function toMinutes(timeString) {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+async function ensureWithinConsultationHours({ doctorId, appointmentDate, startTime, durationMinutes }) {
+  const doctor = await doctorModel.getDoctorById(doctorId);
+  if (!doctor) {
+    throw new AppError('Doctor not found', 404);
+  }
+
+  if (doctor.consult_days) {
+    const dayOfWeek = DAY_ABBREVIATIONS[new Date(`${appointmentDate}T00:00:00Z`).getUTCDay()];
+    const allowedDays = doctor.consult_days.split(',');
+    if (!allowedDays.includes(dayOfWeek)) {
+      throw new AppError(`Dr. ${doctor.full_name} does not have consultations on ${dayOfWeek}`, 409);
+    }
+  }
+
+  if (doctor.consult_start_time && doctor.consult_end_time) {
+    const requestedStart = toMinutes(startTime);
+    const requestedEnd = requestedStart + Number(durationMinutes ?? 30);
+    const consultStart = toMinutes(doctor.consult_start_time.slice(0, 5));
+    const consultEnd = toMinutes(doctor.consult_end_time.slice(0, 5));
+
+    if (requestedStart < consultStart || requestedEnd > consultEnd) {
+      throw new AppError(
+        `Appointment must be within Dr. ${doctor.full_name}'s consultation hours (${doctor.consult_start_time.slice(0, 5)} - ${doctor.consult_end_time.slice(0, 5)})`,
+        409
+      );
+    }
+  }
+}
+
 async function ensureNoConflict({
   doctorId,
   appointmentDate,
@@ -48,11 +85,20 @@ async function ensureNoConflict({
 }
 
 async function createAppointment(data) {
+  const durationMinutes = data.durationMinutes ?? 30;
+
+  await ensureWithinConsultationHours({
+    doctorId: data.doctorId,
+    appointmentDate: data.appointmentDate,
+    startTime: data.startTime,
+    durationMinutes,
+  });
+
   await ensureNoConflict({
     doctorId: data.doctorId,
     appointmentDate: data.appointmentDate,
     startTime: data.startTime,
-    durationMinutes: data.durationMinutes ?? 30,
+    durationMinutes,
   });
 
   const appointment = await appointmentModel.createAppointment(data);
@@ -81,6 +127,13 @@ async function updateAppointment(id, fields) {
   const effectiveDate = fields.appointmentDate ?? existing.appointment_date;
   const effectiveStartTime = fields.startTime ?? existing.start_time;
   const effectiveDuration = fields.durationMinutes ?? existing.duration_minutes;
+
+  await ensureWithinConsultationHours({
+    doctorId: effectiveDoctorId,
+    appointmentDate: effectiveDate,
+    startTime: effectiveStartTime,
+    durationMinutes: effectiveDuration,
+  });
 
   await ensureNoConflict({
     doctorId: effectiveDoctorId,

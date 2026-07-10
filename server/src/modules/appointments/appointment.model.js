@@ -233,6 +233,19 @@ async function findConflictingAppointments({
   return rows;
 }
 
+async function hasFutureAppointmentsForDoctor(doctorId) {
+  const query = `
+    SELECT 1
+    FROM appointments
+    WHERE doctor_id = $1
+      AND status NOT IN ('cancelled', 'completed')
+      AND appointment_date >= CURRENT_DATE
+    LIMIT 1
+  `;
+  const { rows } = await db.query(query, [doctorId]);
+  return rows.length > 0;
+}
+
 module.exports = {
   createAppointment,
   getAppointmentById,
@@ -242,4 +255,5 @@ module.exports = {
   listAppointments,
   getAppointmentCount,
   findConflictingAppointments,
+  hasFutureAppointmentsForDoctor,
 };
