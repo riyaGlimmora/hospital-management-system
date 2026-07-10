@@ -12,7 +12,9 @@ import AddDoctor from '../pages/doctors/AddDoctor';
 import EditDoctor from '../pages/doctors/EditDoctor';
 import DoctorDetails from '../pages/doctors/DoctorDetails';
 import AppointmentList from '../pages/appointments/AppointmentList';
+import AddAppointment from '../pages/appointments/AddAppointment';
 import BillingList from '../pages/billing/BillingList';
+import GenerateBill from '../pages/billing/GenerateBill';
 
 export default function AppRoutes() {
   return (
@@ -35,8 +37,10 @@ export default function AppRoutes() {
           <Route path="/doctors/:id/edit" element={<EditDoctor />} />
 
           <Route path="/appointments" element={<AppointmentList />} />
+          <Route path="/appointments/new" element={<AddAppointment />} />
 
           <Route path="/billing" element={<BillingList />} />
+          <Route path="/billing/new" element={<GenerateBill />} />
         </Route>
       </Route>
 
