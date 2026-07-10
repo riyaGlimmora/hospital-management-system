@@ -61,10 +61,12 @@ async function listDoctors(req, res, next) {
     const pageNumber = Number(req.query.page) || 1;
     const limitNumber = Number(req.query.limit) || 10;
     const includeInactive = req.query.includeInactive === 'true';
+    const departmentId = req.query.departmentId ? Number(req.query.departmentId) : undefined;
     const result = await doctorService.listDoctors({
       page: pageNumber,
       limit: limitNumber,
       includeInactive,
+      departmentId,
     });
     res.status(200).json({
       success: true,
@@ -81,11 +83,13 @@ async function searchDoctors(req, res, next) {
     const pageNumber = Number(req.query.page) || 1;
     const limitNumber = Number(req.query.limit) || 10;
     const includeInactive = req.query.includeInactive === 'true';
+    const departmentId = req.query.departmentId ? Number(req.query.departmentId) : undefined;
     const result = await doctorService.searchDoctors({
       searchTerm: req.query.search,
       page: pageNumber,
       limit: limitNumber,
       includeInactive,
+      departmentId,
     });
     res.status(200).json({
       success: true,

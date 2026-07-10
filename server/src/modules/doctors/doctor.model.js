@@ -1,61 +1,88 @@
 const db = require('../../config/db');
 
 const DOCTOR_COLUMNS = `
-  id, doctor_id, full_name, specialization, phone, email, qualification,
-  experience_years, consultation_fee, gender, is_active, created_at, updated_at
+  d.id, d.doctor_id, d.full_name, d.specialization, d.department_id,
+  dept.name AS department_name, d.phone, d.email, d.qualification,
+  d.experience_years, d.consultation_fee, d.gender,
+  d.consult_start_time, d.consult_end_time, d.consult_days,
+  d.is_active, d.created_at, d.updated_at
 `;
 
 const UPDATABLE_COLUMNS = {
   fullName: 'full_name',
   specialization: 'specialization',
+  departmentId: 'department_id',
   phone: 'phone',
   email: 'email',
   qualification: 'qualification',
   experienceYears: 'experience_years',
   consultationFee: 'consultation_fee',
   gender: 'gender',
+  consultStartTime: 'consult_start_time',
+  consultEndTime: 'consult_end_time',
+  consultDays: 'consult_days',
 };
+
+function serializeConsultDays(consultDays) {
+  if (consultDays === undefined) {
+    return undefined;
+  }
+  if (consultDays === null) {
+    return null;
+  }
+  return Array.isArray(consultDays) ? consultDays.join(',') : consultDays;
+}
 
 async function createDoctor({
   fullName,
   specialization,
+  departmentId,
   phone,
   email,
   qualification,
   experienceYears,
   consultationFee,
   gender,
+  consultStartTime,
+  consultEndTime,
+  consultDays,
 }) {
   const query = `
     INSERT INTO doctors (
-      full_name, specialization, phone, email, qualification,
-      experience_years, consultation_fee, gender
+      full_name, specialization, department_id, phone, email, qualification,
+      experience_years, consultation_fee, gender,
+      consult_start_time, consult_end_time, consult_days
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    RETURNING ${DOCTOR_COLUMNS}
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    RETURNING id
   `;
   const values = [
     fullName,
     specialization,
+    departmentId,
     phone,
     email,
     qualification,
     experienceYears,
     consultationFee,
     gender,
+    consultStartTime,
+    consultEndTime,
+    serializeConsultDays(consultDays),
   ];
   const { rows } = await db.query(query, values);
-  return rows[0] ?? null;
+  return getDoctorById(rows[0].id, { includeInactive: true });
 }
 
 async function getDoctorById(id, { includeInactive = false } = {}) {
-  const conditions = ['id = $1'];
+  const conditions = ['d.id = $1'];
   if (!includeInactive) {
-    conditions.push('is_active = TRUE');
+    conditions.push('d.is_active = TRUE');
   }
   const query = `
     SELECT ${DOCTOR_COLUMNS}
-    FROM doctors
+    FROM doctors d
+    LEFT JOIN departments dept ON dept.id = d.department_id
     WHERE ${conditions.join(' AND ')}
   `;
   const { rows } = await db.query(query, [id]);
@@ -63,13 +90,14 @@ async function getDoctorById(id, { includeInactive = false } = {}) {
 }
 
 async function getDoctorByDoctorId(doctorId, { includeInactive = false } = {}) {
-  const conditions = ['doctor_id = $1'];
+  const conditions = ['d.doctor_id = $1'];
   if (!includeInactive) {
-    conditions.push('is_active = TRUE');
+    conditions.push('d.is_active = TRUE');
   }
   const query = `
     SELECT ${DOCTOR_COLUMNS}
-    FROM doctors
+    FROM doctors d
+    LEFT JOIN departments dept ON dept.id = d.department_id
     WHERE ${conditions.join(' AND ')}
   `;
   const { rows } = await db.query(query, [doctorId]);
@@ -83,8 +111,9 @@ async function updateDoctor(id, fields) {
 
   for (const [key, column] of Object.entries(UPDATABLE_COLUMNS)) {
     if (Object.prototype.hasOwnProperty.call(fields, key)) {
+      const value = key === 'consultDays' ? serializeConsultDays(fields[key]) : fields[key];
       setClauses.push(`${column} = $${paramIndex}`);
-      values.push(fields[key]);
+      values.push(value);
       paramIndex += 1;
     }
   }
@@ -99,10 +128,13 @@ async function updateDoctor(id, fields) {
     UPDATE doctors
     SET ${setClauses.join(', ')}
     WHERE id = $${paramIndex}
-    RETURNING ${DOCTOR_COLUMNS}
+    RETURNING id
   `;
   const { rows } = await db.query(query, values);
-  return rows[0] ?? null;
+  if (!rows[0]) {
+    return null;
+  }
+  return getDoctorById(rows[0].id, { includeInactive: true });
 }
 
 async function softDeleteDoctor(id) {
@@ -117,48 +149,75 @@ async function softDeleteDoctor(id) {
   return rows[0] ?? null;
 }
 
-async function listDoctors({ limit, offset, includeInactive = false }) {
+async function listDoctors({ limit, offset, includeInactive = false, departmentId }) {
   const conditions = [];
+  const values = [];
+  let paramIndex = 1;
+
   if (!includeInactive) {
-    conditions.push('is_active = TRUE');
+    conditions.push('d.is_active = TRUE');
+  }
+  if (departmentId) {
+    conditions.push(`d.department_id = $${paramIndex}`);
+    values.push(departmentId);
+    paramIndex += 1;
   }
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  values.push(limit, offset);
   const query = `
     SELECT ${DOCTOR_COLUMNS}
-    FROM doctors
+    FROM doctors d
+    LEFT JOIN departments dept ON dept.id = d.department_id
     ${whereClause}
-    ORDER BY created_at DESC
-    LIMIT $1 OFFSET $2
+    ORDER BY d.created_at DESC
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
-  const { rows } = await db.query(query, [limit, offset]);
-  return rows;
-}
-
-async function searchDoctors({ searchTerm, limit, offset, includeInactive = false }) {
-  const conditions = [
-    '(doctor_id ILIKE $1 OR full_name ILIKE $1 OR specialization ILIKE $1 OR phone ILIKE $1)',
-  ];
-  if (!includeInactive) {
-    conditions.push('is_active = TRUE');
-  }
-
-  const query = `
-    SELECT ${DOCTOR_COLUMNS}
-    FROM doctors
-    WHERE ${conditions.join(' AND ')}
-    ORDER BY created_at DESC
-    LIMIT $2 OFFSET $3
-  `;
-  const values = [`%${searchTerm}%`, limit, offset];
   const { rows } = await db.query(query, values);
   return rows;
 }
 
-async function getDoctorCount({ includeInactive = false } = {}) {
+async function searchDoctors({ searchTerm, limit, offset, includeInactive = false, departmentId }) {
+  const conditions = [
+    '(d.doctor_id ILIKE $1 OR d.full_name ILIKE $1 OR d.specialization ILIKE $1 OR d.phone ILIKE $1)',
+  ];
+  const values = [`%${searchTerm}%`];
+  let paramIndex = 2;
+
+  if (!includeInactive) {
+    conditions.push('d.is_active = TRUE');
+  }
+  if (departmentId) {
+    conditions.push(`d.department_id = $${paramIndex}`);
+    values.push(departmentId);
+    paramIndex += 1;
+  }
+
+  values.push(limit, offset);
+  const query = `
+    SELECT ${DOCTOR_COLUMNS}
+    FROM doctors d
+    LEFT JOIN departments dept ON dept.id = d.department_id
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY d.created_at DESC
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+  `;
+  const { rows } = await db.query(query, values);
+  return rows;
+}
+
+async function getDoctorCount({ includeInactive = false, departmentId } = {}) {
   const conditions = [];
+  const values = [];
+  let paramIndex = 1;
+
   if (!includeInactive) {
     conditions.push('is_active = TRUE');
+  }
+  if (departmentId) {
+    conditions.push(`department_id = $${paramIndex}`);
+    values.push(departmentId);
+    paramIndex += 1;
   }
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -167,16 +226,24 @@ async function getDoctorCount({ includeInactive = false } = {}) {
     FROM doctors
     ${whereClause}
   `;
-  const { rows } = await db.query(query);
+  const { rows } = await db.query(query, values);
   return rows[0]?.total ?? 0;
 }
 
-async function getDoctorSearchCount({ searchTerm, includeInactive = false }) {
+async function getDoctorSearchCount({ searchTerm, includeInactive = false, departmentId }) {
   const conditions = [
     '(doctor_id ILIKE $1 OR full_name ILIKE $1 OR specialization ILIKE $1 OR phone ILIKE $1)',
   ];
+  const values = [`%${searchTerm}%`];
+  let paramIndex = 2;
+
   if (!includeInactive) {
     conditions.push('is_active = TRUE');
+  }
+  if (departmentId) {
+    conditions.push(`department_id = $${paramIndex}`);
+    values.push(departmentId);
+    paramIndex += 1;
   }
 
   const query = `
@@ -184,7 +251,7 @@ async function getDoctorSearchCount({ searchTerm, includeInactive = false }) {
     FROM doctors
     WHERE ${conditions.join(' AND ')}
   `;
-  const { rows } = await db.query(query, [`%${searchTerm}%`]);
+  const { rows } = await db.query(query, values);
   return rows[0]?.total ?? 0;
 }
 

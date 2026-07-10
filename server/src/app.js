@@ -3,6 +3,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const authRoutes = require('./modules/auth');
 const doctorRoutes = require('./modules/doctors');
+const departmentRoutes = require('./modules/departments');
 const appointmentRoutes = require('./modules/appointments');
 const billingRoutes = require('./modules/billing');
 const patientRoutes = require('./modules/patient');
@@ -29,6 +30,7 @@ app.get('/api/v1/health', (req, res) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/doctors', doctorRoutes);
+app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
 app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
