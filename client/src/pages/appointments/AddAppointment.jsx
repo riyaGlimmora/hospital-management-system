@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
-import { createAppointment } from '../../api/appointment.api';
-import { getPatients } from '../../api/patient.api';
-import { getDoctors } from '../../api/doctor.api';
+import { createAppointment } from '../../api/appointmentApi';
+import { getPatients } from '../../api/patientAPi';
+import { getDoctors } from '../../api/doctorApi';
 
 const DURATIONS = [15, 30, 45, 60];
 const PRIORITIES = ['normal', 'urgent', 'emergency'];

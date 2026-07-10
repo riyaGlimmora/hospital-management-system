@@ -10,7 +10,7 @@ import {
   RefreshCw,
   Loader2,
 } from 'lucide-react';
-import { getPatientById, deletePatient } from '../../api/patient.api';
+import { getPatientById, deletePatient } from '../../api/patientApi';
 
 function StatusBadge({ isActive }) {
   return (

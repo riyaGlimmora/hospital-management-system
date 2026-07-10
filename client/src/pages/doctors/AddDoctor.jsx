@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { createDoctor } from '../../api/doctor.api';
+import { createDoctor } from '../../api/doctorApi';
 
 const INITIAL_FORM = {
   fullName: '',

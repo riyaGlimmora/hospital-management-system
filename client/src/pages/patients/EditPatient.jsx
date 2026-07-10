@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { getPatientById, updatePatient } from '../../api/patient.api';
+import { getPatientById, updatePatient } from '../../api/patientApi';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 

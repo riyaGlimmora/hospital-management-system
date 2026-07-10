@@ -14,7 +14,7 @@ const Billing = () => {
 export default Billing;import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, AlertCircle, RefreshCw, Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getBills } from '../../api/billing.api';
+import { getBills } from '../../api/billingApi';
 
 const PAGE_SIZE = 10;
 

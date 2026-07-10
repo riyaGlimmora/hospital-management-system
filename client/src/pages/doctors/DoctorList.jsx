@@ -14,7 +14,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { getDoctors, searchDoctors, deleteDoctor } from '../../api/doctor.api';
+import { getDoctors, searchDoctors, deleteDoctor } from '../../api/doctorApi';
 
 const PAGE_SIZE = 10;
 

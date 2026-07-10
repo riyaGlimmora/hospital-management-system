@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { createBill } from '../../api/billing.api';
-import { getPatients } from '../../api/patient.api';
-import { getDoctors } from '../../api/doctor.api';
-import { getAppointments } from '../../api/appointment.api';
+import { createBill } from '../../api/billingAPi';
+import { getPatients } from '../../api/patientApi';
+import { getDoctors } from '../../api/doctorApi';
+import { getAppointments } from '../../api/appointmentApi';
 
 const PAYMENT_METHODS = ['cash', 'card', 'upi', 'net_banking'];
 
