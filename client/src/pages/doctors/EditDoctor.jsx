@@ -1,17 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { getDoctorById, updateDoctor } from '../../api/doctorApi';
+import { getDoctorById, updateDoctor, getDepartments } from '../../api/doctorApi';
+
+const CONSULT_DAY_OPTIONS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const EMPTY_FORM = {
   fullName: '',
   specialization: '',
+  departmentId: '',
   qualification: '',
   experienceYears: '',
   consultationFee: '',
   gender: '',
   phone: '',
   email: '',
+  consultStartTime: '',
+  consultEndTime: '',
+  consultDays: [],
 };
 
 function FieldError({ message }) {
@@ -26,11 +32,18 @@ export default function EditDoctor() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const [departments, setDepartments] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    getDepartments()
+      .then((response) => setDepartments(response.data.data))
+      .catch(() => setDepartments([]));
+  }, []);
 
   const fetchDoctor = useCallback(async () => {
     setIsLoading(true);
@@ -41,12 +54,16 @@ export default function EditDoctor() {
       setForm({
         fullName: doctor.fullName ?? '',
         specialization: doctor.specialization ?? '',
+        departmentId: doctor.departmentId ?? '',
         qualification: doctor.qualification ?? '',
         experienceYears: doctor.experienceYears ?? '',
         consultationFee: doctor.consultationFee ?? '',
         gender: doctor.gender ?? '',
         phone: doctor.phone ?? '',
         email: doctor.email ?? '',
+        consultStartTime: doctor.consultStartTime ? doctor.consultStartTime.slice(0, 5) : '',
+        consultEndTime: doctor.consultEndTime ? doctor.consultEndTime.slice(0, 5) : '',
+        consultDays: doctor.consultDays ?? [],
       });
     } catch (error) {
       setLoadError(
@@ -65,6 +82,15 @@ export default function EditDoctor() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function toggleConsultDay(day) {
+    setForm((prev) => ({
+      ...prev,
+      consultDays: prev.consultDays.includes(day)
+        ? prev.consultDays.filter((d) => d !== day)
+        : [...prev.consultDays, day],
+    }));
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage('');
@@ -74,6 +100,7 @@ export default function EditDoctor() {
     try {
       const payload = {
         ...form,
+        departmentId: Number(form.departmentId),
         experienceYears: Number(form.experienceYears),
         consultationFee: Number(form.consultationFee),
       };
@@ -202,6 +229,29 @@ export default function EditDoctor() {
             </div>
 
             <div>
+              <label htmlFor="departmentId" className="block text-sm font-medium text-slate-700">
+                Department
+              </label>
+              <select
+                id="departmentId"
+                required
+                value={form.departmentId}
+                onChange={(event) => updateField('departmentId', event.target.value)}
+                className="mt-1.5 block w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0F6B66] focus:outline-none focus:ring-2 focus:ring-[#0F6B66]/20"
+              >
+                <option value="" disabled>
+                  Select department
+                </option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name}
+                  </option>
+                ))}
+              </select>
+              <FieldError message={fieldErrors.departmentId} />
+            </div>
+
+            <div>
               <label htmlFor="specialization" className="block text-sm font-medium text-slate-700">
                 Specialization
               </label>
@@ -306,6 +356,67 @@ export default function EditDoctor() {
               />
               <FieldError message={fieldErrors.email} />
             </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-['Manrope',sans-serif] text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Consultation Schedule
+          </h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <label htmlFor="consultStartTime" className="block text-sm font-medium text-slate-700">
+                Consultation Start Time
+              </label>
+              <input
+                id="consultStartTime"
+                type="time"
+                required
+                value={form.consultStartTime}
+                onChange={(event) => updateField('consultStartTime', event.target.value)}
+                className="mt-1.5 block w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0F6B66] focus:outline-none focus:ring-2 focus:ring-[#0F6B66]/20"
+              />
+              <FieldError message={fieldErrors.consultStartTime} />
+            </div>
+
+            <div>
+              <label htmlFor="consultEndTime" className="block text-sm font-medium text-slate-700">
+                Consultation End Time
+              </label>
+              <input
+                id="consultEndTime"
+                type="time"
+                required
+                value={form.consultEndTime}
+                onChange={(event) => updateField('consultEndTime', event.target.value)}
+                className="mt-1.5 block w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0F6B66] focus:outline-none focus:ring-2 focus:ring-[#0F6B66]/20"
+              />
+              <FieldError message={fieldErrors.consultEndTime} />
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <span className="block text-sm font-medium text-slate-700">Consultation Days</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {CONSULT_DAY_OPTIONS.map((day) => {
+                const isSelected = form.consultDays.includes(day);
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleConsultDay(day)}
+                    className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isSelected
+                        ? 'border-[#0F6B66] bg-[#0F6B66]/10 text-[#0F6B66]'
+                        : 'border-slate-300 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+            <FieldError message={fieldErrors.consultDays} />
           </div>
         </div>
 
