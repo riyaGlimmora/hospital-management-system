@@ -147,10 +147,29 @@ async function updateAppointment(id, fields) {
   return toAppointmentDto(updated);
 }
 
+const ALLOWED_STATUS_TRANSITIONS = {
+  scheduled: ['checked_in', 'cancelled'],
+  checked_in: ['completed', 'cancelled'],
+  completed: [],
+  cancelled: [],
+};
+
 async function updateAppointmentStatus(id, status) {
   const existing = await appointmentModel.getAppointmentById(id);
   if (!existing) {
     throw new AppError('Appointment not found', 404);
+  }
+
+  if (existing.status === status) {
+    throw new AppError(`Appointment is already ${status}`, 409);
+  }
+
+  const allowedNextStatuses = ALLOWED_STATUS_TRANSITIONS[existing.status] ?? [];
+  if (!allowedNextStatuses.includes(status)) {
+    throw new AppError(
+      `Cannot move an appointment from "${existing.status}" to "${status}"`,
+      409
+    );
   }
 
   const updated = await appointmentModel.updateAppointmentStatus(id, status);
