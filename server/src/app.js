@@ -32,7 +32,7 @@ app.use('/api/v1/doctors', doctorRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
 app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
-app.use('/api/v1/patient', patientRoutes);
+app.use('/api/v1/patients', patientRoutes);
 
 
 app.use((req, res, next) => {

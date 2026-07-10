@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, HeartPulse } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,7 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const justRegistered = Boolean(location.state?.registered);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -82,6 +83,11 @@ export default function Login() {
           </p>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+            {justRegistered && !errorMessage && (
+              <div className="rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                Account created. Sign in to continue.
+              </div>
+            )}
             {errorMessage && (
               <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
                 {errorMessage}
@@ -138,6 +144,13 @@ export default function Login() {
               {isSubmitting && <Loader2 size={16} className="animate-spin" />}
               {isSubmitting ? 'Signing in…' : 'Sign in'}
             </button>
+
+            <p className="text-center text-sm text-slate-500">
+              Need an account?{' '}
+              <Link to="/register" className="font-medium text-[#0F6B66] hover:underline">
+                Sign up
+              </Link>
+            </p>
           </form>
         </div>
       </div>

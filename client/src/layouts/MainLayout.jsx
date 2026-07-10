@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -110,13 +110,19 @@ export default function MainLayout() {
           <div className="hidden md:block" />
 
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
+            <Link
+              to="/profile"
+              className="hidden text-right sm:block hover:opacity-80"
+            >
               <p className="text-sm font-medium text-slate-800">{user?.fullName ?? 'User'}</p>
               <p className="text-xs capitalize text-slate-400">{user?.role ?? ''}</p>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0F6B66] text-sm font-semibold text-white">
+            </Link>
+            <Link
+              to="/profile"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0F6B66] text-sm font-semibold text-white hover:opacity-90"
+            >
               {getInitials(user?.fullName)}
-            </div>
+            </Link>
             <button
               type="button"
               onClick={logout}
