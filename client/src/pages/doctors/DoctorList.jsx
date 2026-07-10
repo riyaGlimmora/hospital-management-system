@@ -14,7 +14,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { getDoctors, searchDoctors, deleteDoctor } from '../../api/doctorApi';
+import { getDoctors, searchDoctors, deleteDoctor, getDepartments } from '../../api/doctorApi';
 
 const PAGE_SIZE = 10;
 
@@ -54,6 +54,8 @@ function TableSkeletonRows({ columns, rows = 6 }) {
 
 export default function DoctorList() {
   const [doctors, setDoctors] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [departmentFilter, setDepartmentFilter] = useState('');
   const [meta, setMeta] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 });
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
@@ -62,6 +64,12 @@ export default function DoctorList() {
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  useEffect(() => {
+    getDepartments()
+      .then((response) => setDepartments(response.data.data))
+      .catch(() => setDepartments([]));
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -75,9 +83,10 @@ export default function DoctorList() {
     setIsLoading(true);
     setErrorMessage('');
     try {
+      const departmentId = departmentFilter || undefined;
       const response = debouncedSearch
-        ? await searchDoctors({ search: debouncedSearch, page, limit: PAGE_SIZE })
-        : await getDoctors({ page, limit: PAGE_SIZE });
+        ? await searchDoctors({ search: debouncedSearch, page, limit: PAGE_SIZE, departmentId })
+        : await getDoctors({ page, limit: PAGE_SIZE, departmentId });
       setDoctors(response.data.data.doctors);
       setMeta(response.data.data.meta);
     } catch (error) {
@@ -87,7 +96,7 @@ export default function DoctorList() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearch, page]);
+  }, [debouncedSearch, page, departmentFilter]);
 
   useEffect(() => {
     fetchDoctors();
@@ -154,7 +163,7 @@ export default function DoctorList() {
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white">
-        <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+        <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center">
           <div className="relative w-full max-w-sm">
             <Search
               size={16}
@@ -168,6 +177,21 @@ export default function DoctorList() {
               className="w-full rounded-md border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#0F6B66] focus:outline-none focus:ring-2 focus:ring-[#0F6B66]/20"
             />
           </div>
+          <select
+            value={departmentFilter}
+            onChange={(event) => {
+              setDepartmentFilter(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#0F6B66] focus:outline-none focus:ring-2 focus:ring-[#0F6B66]/20"
+          >
+            <option value="">All departments</option>
+            {departments.map((department) => (
+              <option key={department.id} value={department.id}>
+                {department.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {errorMessage && doctors.length > 0 && (
@@ -183,6 +207,7 @@ export default function DoctorList() {
               <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-4 py-3 font-medium">Doctor ID</th>
                 <th className="px-4 py-3 font-medium">Full Name</th>
+                <th className="px-4 py-3 font-medium">Department</th>
                 <th className="px-4 py-3 font-medium">Specialization</th>
                 <th className="px-4 py-3 font-medium">Phone</th>
                 <th className="px-4 py-3 font-medium">Consultation Fee</th>
@@ -192,10 +217,10 @@ export default function DoctorList() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <TableSkeletonRows columns={7} />
+                <TableSkeletonRows columns={8} />
               ) : doctors.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-14">
+                  <td colSpan={8} className="px-4 py-14">
                     <div className="flex flex-col items-center justify-center text-center">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                         <Stethoscope size={22} />
@@ -218,6 +243,7 @@ export default function DoctorList() {
                       {doctor.doctorId}
                     </td>
                     <td className="px-4 py-3 font-medium text-slate-800">{doctor.fullName}</td>
+                    <td className="px-4 py-3 text-slate-600">{doctor.departmentName ?? '—'}</td>
                     <td className="px-4 py-3 text-slate-600">{doctor.specialization}</td>
                     <td className="px-4 py-3 text-slate-600">{doctor.phone}</td>
                     <td className="px-4 py-3 text-slate-600">

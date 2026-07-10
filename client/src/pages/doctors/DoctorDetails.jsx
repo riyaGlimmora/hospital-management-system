@@ -234,11 +234,27 @@ export default function DoctorDetails() {
       </div>
 
       <SectionCard title="Professional Details">
+        <InfoField label="Department" value={doctor.departmentName} />
         <InfoField label="Specialization" value={doctor.specialization} />
         <InfoField label="Qualification" value={doctor.qualification} />
         <InfoField label="Experience" value={`${doctor.experienceYears} years`} />
         <InfoField label="Consultation Fee" value={formatCurrency(doctor.consultationFee)} />
         <InfoField label="Gender" value={doctor.gender} />
+      </SectionCard>
+
+      <SectionCard title="Consultation Schedule">
+        <InfoField
+          label="Hours"
+          value={
+            doctor.consultStartTime && doctor.consultEndTime
+              ? `${doctor.consultStartTime.slice(0, 5)} - ${doctor.consultEndTime.slice(0, 5)}`
+              : null
+          }
+        />
+        <InfoField
+          label="Days"
+          value={doctor.consultDays?.length ? doctor.consultDays.join(', ') : null}
+        />
       </SectionCard>
 
       <SectionCard title="Contact Details">
