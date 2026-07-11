@@ -19,6 +19,8 @@ function errorHandler(err, req, res, next) {
     success: false,
     message: 'Internal server error',
     errors: null,
+    // Temporary: expose error detail in all envs to aid debugging
+    _debug: err.message,
   };
   if (isDevelopment) {
     response.stack = err.stack;
