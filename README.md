@@ -91,7 +91,7 @@ development and demos only.
 
    | Variable            | Description                                  |
    |---------------------|-----------------------------------------------|
-   | `VITE_API_BASE_URL` | Base URL of the backend API, including `/api/v1` |
+   | `VITE_API_BASE_URL` | Base URL of the backend API, without any path suffix (e.g. `http://localhost:5000`) |
 
 3. Start the dev server:
    ```
