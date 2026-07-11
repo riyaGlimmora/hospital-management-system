@@ -35,6 +35,11 @@ function toMinutes(timeString) {
   return hours * 60 + minutes;
 }
 
+function getUTCDayIndex(dateValue) {
+  const date = dateValue instanceof Date ? dateValue : new Date(`${dateValue}T00:00:00Z`);
+  return date.getUTCDay();
+}
+
 async function ensureWithinConsultationHours({ doctorId, appointmentDate, startTime, durationMinutes }) {
   const doctor = await doctorModel.getDoctorById(doctorId);
   if (!doctor) {
@@ -42,7 +47,7 @@ async function ensureWithinConsultationHours({ doctorId, appointmentDate, startT
   }
 
   if (doctor.consult_days) {
-    const dayOfWeek = DAY_ABBREVIATIONS[new Date(`${appointmentDate}T00:00:00Z`).getUTCDay()];
+    const dayOfWeek = DAY_ABBREVIATIONS[getUTCDayIndex(appointmentDate)];
     const allowedDays = doctor.consult_days.split(',');
     if (!allowedDays.includes(dayOfWeek)) {
       throw new AppError(`Dr. ${doctor.full_name} does not have consultations on ${dayOfWeek}`, 409);
