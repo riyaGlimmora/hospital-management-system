@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const morgan = require('morgan');
 const authRoutes = require('./modules/auth');
 const doctorRoutes = require('./modules/doctors');
@@ -13,8 +14,27 @@ const AppError = require('./utils/AppError');
 
 const app = express();
 
+const allowedOrigins = (process.env.CLIENT_ORIGIN ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser requests (no Origin header, e.g. health checks/curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new AppError(`Origin ${origin} is not allowed by CORS`, 403));
+  },
+};
+
+app.use(helmet());
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/api/v1/health', (req, res) => {
