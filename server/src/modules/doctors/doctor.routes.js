@@ -46,7 +46,7 @@ router.put(
 router.delete(
   '/:id',
   authenticate,
-  authorize('admin', 'receptionist'),
+  authorize('admin'),
   doctorController.deleteDoctor
 );
 
