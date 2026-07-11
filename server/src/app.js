@@ -19,10 +19,17 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN ?? '')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+// Vercel preview URL pattern: https://<project>-<hash>-<scope>.vercel.app
+const VERCEL_PREVIEW_PATTERN = /^https:\/\/[\w-]+-[\w]+-[\w-]+\.vercel\.app$/;
+
 const corsOptions = {
   origin(origin, callback) {
     // Allow non-browser requests (no Origin header, e.g. health checks/curl)
     if (!origin) {
+      return callback(null, true);
+    }
+    // Allow any *.vercel.app origin (covers preview + production deployments)
+    if (origin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
     if (allowedOrigins.includes(origin)) {
@@ -32,9 +39,9 @@ const corsOptions = {
   },
 };
 
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(express.json());
-app.use(cors(corsOptions));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/api/v1/health', (req, res) => {
