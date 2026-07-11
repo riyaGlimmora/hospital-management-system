@@ -29,6 +29,7 @@ export default function AddPatient() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
 
   const navigate = useNavigate();
 
@@ -36,23 +37,41 @@ export default function AddPatient() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  async function submitPatient({ confirmDuplicate }) {
+    const payload = {
+      ...form,
+      email: form.email.trim() === '' ? undefined : form.email.trim(),
+      bloodGroup: form.bloodGroup === '' ? undefined : form.bloodGroup,
+      confirmDuplicate,
+    };
+    const response = await createPatient(payload);
+    const newPatient = response.data.data;
+    navigate(`/patients/${newPatient.id}`);
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage('');
     setFieldErrors({});
+    setDuplicateWarning(null);
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        ...form,
-        email: form.email.trim() === '' ? undefined : form.email.trim(),
-        bloodGroup: form.bloodGroup === '' ? undefined : form.bloodGroup,
-      };
-      const response = await createPatient(payload);
-      const newPatient = response.data.data;
-      navigate(`/patients/${newPatient.id}`);
+      await submitPatient({ confirmDuplicate: false });
     } catch (error) {
       const backendErrors = error.response?.data?.errors;
+      const duplicateError = Array.isArray(backendErrors)
+        ? backendErrors.find((item) => item.field === 'duplicate')
+        : null;
+
+      if (duplicateError) {
+        setDuplicateWarning({
+          message: error.response.data.message,
+          existingPatientId: duplicateError.existingPatientId,
+        });
+        return;
+      }
+
       if (Array.isArray(backendErrors) && backendErrors.length > 0) {
         const mapped = {};
         backendErrors.forEach((item) => {
@@ -60,6 +79,21 @@ export default function AddPatient() {
         });
         setFieldErrors(mapped);
       }
+      setErrorMessage(
+        error.response?.data?.message ?? 'Unable to save this patient right now.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleConfirmDuplicate() {
+    setIsSubmitting(true);
+    setErrorMessage('');
+    try {
+      await submitPatient({ confirmDuplicate: true });
+    } catch (error) {
+      setDuplicateWarning(null);
       setErrorMessage(
         error.response?.data?.message ?? 'Unable to save this patient right now.'
       );
@@ -93,6 +127,41 @@ export default function AddPatient() {
         {errorMessage && (
           <div className="rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
             {errorMessage}
+          </div>
+        )}
+
+        {duplicateWarning && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <p className="font-medium">{duplicateWarning.message}</p>
+            <p className="mt-1 text-amber-700">
+              This may be the same person, or a different patient with a matching name and
+              phone number or date of birth. Check the existing record before continuing.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {duplicateWarning.existingPatientId && (
+                <Link
+                  to={`/patients/${duplicateWarning.existingPatientId}`}
+                  className="rounded-md border border-amber-300 bg-white px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"
+                >
+                  View existing patient
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleConfirmDuplicate}
+                disabled={isSubmitting}
+                className="rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60"
+              >
+                Register as new patient anyway
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicateWarning(null)}
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 
