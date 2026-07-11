@@ -13,7 +13,7 @@ const createPatientSchema = Joi.object({
   phone: Joi.string().trim().pattern(PHONE_REGEX).required().messages({
     'string.pattern.base': 'Phone must be a valid phone number',
   }),
-  email: Joi.string().trim().lowercase().email().max(255).optional().allow(null, ''),
+  email: Joi.string().trim().lowercase().email({ tlds: { allow: false } }).max(255).optional().allow(null, ''),
   address: Joi.string().trim().min(5).max(500).required(),
   bloodGroup: Joi.string().valid(...BLOOD_GROUPS).optional().allow(null, ''),
   emergencyContactName: Joi.string().trim().min(2).max(150).required(),
@@ -34,7 +34,7 @@ const updatePatientSchema = Joi.object({
   phone: Joi.string().trim().pattern(PHONE_REGEX).optional().messages({
     'string.pattern.base': 'Phone must be a valid phone number',
   }),
-  email: Joi.string().trim().lowercase().email().max(255).optional().allow(null, ''),
+  email: Joi.string().trim().lowercase().email({ tlds: { allow: false } }).max(255).optional().allow(null, ''),
   address: Joi.string().trim().min(5).max(500).optional(),
   bloodGroup: Joi.string().valid(...BLOOD_GROUPS).optional().allow(null, ''),
   emergencyContactName: Joi.string().trim().min(2).max(150).optional(),

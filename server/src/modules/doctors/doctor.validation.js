@@ -12,7 +12,7 @@ const createDoctorSchema = Joi.object({
   phone: Joi.string().trim().pattern(PHONE_REGEX).required().messages({
     'string.pattern.base': 'Phone must be a valid phone number',
   }),
-  email: Joi.string().trim().lowercase().email().max(255).required(),
+  email: Joi.string().trim().lowercase().email({ tlds: { allow: false } }).max(255).required(),
   qualification: Joi.string().trim().min(2).max(150).required(),
   experienceYears: Joi.number().integer().min(0).required(),
   consultationFee: Joi.number().min(0).required(),
@@ -36,7 +36,7 @@ const updateDoctorSchema = Joi.object({
   phone: Joi.string().trim().pattern(PHONE_REGEX).optional().messages({
     'string.pattern.base': 'Phone must be a valid phone number',
   }),
-  email: Joi.string().trim().lowercase().email().max(255).optional(),
+  email: Joi.string().trim().lowercase().email({ tlds: { allow: false } }).max(255).optional(),
   qualification: Joi.string().trim().min(2).max(150).optional(),
   experienceYears: Joi.number().integer().min(0).optional(),
   consultationFee: Joi.number().min(0).optional(),
