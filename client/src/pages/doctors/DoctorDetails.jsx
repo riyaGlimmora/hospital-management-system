@@ -11,6 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { getDoctorById, deleteDoctor } from '../../api/doctorApi';
+import { useAuth } from '../../context/AuthContext';
 
 function StatusBadge({ isActive }) {
   return (
@@ -92,6 +93,8 @@ function DetailsSkeleton() {
 export default function DoctorDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canDelete = user?.role === 'admin';
 
   const [doctor, setDoctor] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,7 +186,7 @@ export default function DoctorDetails() {
             </p>
           </div>
 
-          {isConfirmingDelete ? (
+          {isConfirmingDelete && canDelete ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-500">Delete this doctor?</span>
               <button
@@ -214,14 +217,16 @@ export default function DoctorDetails() {
                 <Pencil size={15} />
                 Edit
               </Link>
-              <button
-                type="button"
-                onClick={() => setIsConfirmingDelete(true)}
-                className="flex items-center gap-1.5 rounded-md border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-              >
-                <Trash2 size={15} />
-                Delete
-              </button>
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmingDelete(true)}
+                  className="flex items-center gap-1.5 rounded-md border border-red-100 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 size={15} />
+                  Delete
+                </button>
+              )}
             </div>
           )}
         </div>

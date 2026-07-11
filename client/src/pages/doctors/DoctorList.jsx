@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { getDoctors, searchDoctors, deleteDoctor, getDepartments } from '../../api/doctorApi';
+import { useAuth } from '../../context/AuthContext';
 
 const PAGE_SIZE = 10;
 
@@ -53,6 +54,8 @@ function TableSkeletonRows({ columns, rows = 6 }) {
 }
 
 export default function DoctorList() {
+  const { user } = useAuth();
+  const canDelete = user?.role === 'admin';
   const [doctors, setDoctors] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -253,7 +256,7 @@ export default function DoctorList() {
                       <StatusBadge isActive={doctor.isActive} />
                     </td>
                     <td className="px-4 py-3">
-                      {confirmDeleteId === doctor.id ? (
+                      {confirmDeleteId === doctor.id && canDelete ? (
                         <div className="flex items-center justify-end gap-2">
                           <span className="text-xs text-slate-500">Delete?</span>
                           <button
@@ -288,14 +291,16 @@ export default function DoctorList() {
                           >
                             <Pencil size={16} />
                           </Link>
-                          <button
-                            type="button"
-                            onClick={() => setConfirmDeleteId(doctor.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
-                            title="Delete doctor"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(doctor.id)}
+                              className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600"
+                              title="Delete doctor"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
