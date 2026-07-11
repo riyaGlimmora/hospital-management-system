@@ -18,6 +18,19 @@ const UPDATABLE_COLUMNS = {
   emergencyContactPhone: 'emergency_contact_phone',
 };
 
+async function findPotentialDuplicate({ fullName, phone, dateOfBirth }) {
+  const query = `
+    SELECT ${PATIENT_COLUMNS}
+    FROM patients
+    WHERE is_active = TRUE
+      AND LOWER(full_name) = LOWER($1)
+      AND (phone = $2 OR date_of_birth = $3)
+    LIMIT 1
+  `;
+  const { rows } = await db.query(query, [fullName, phone, dateOfBirth ?? null]);
+  return rows[0] ?? null;
+}
+
 async function createPatient({
   fullName,
   gender,
@@ -194,6 +207,7 @@ async function getPatientSearchCount({ searchTerm, includeInactive = false }) {
 
 module.exports = {
   createPatient,
+  findPotentialDuplicate,
   getPatientById,
   getPatientByPatientId,
   updatePatient,

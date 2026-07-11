@@ -20,6 +20,7 @@ const createPatientSchema = Joi.object({
   emergencyContactPhone: Joi.string().trim().pattern(PHONE_REGEX).required().messages({
     'string.pattern.base': 'Emergency contact phone must be a valid phone number',
   }),
+  confirmDuplicate: Joi.boolean().default(false),
 }).options({
   abortEarly: false,
   stripUnknown: true,

@@ -37,8 +37,33 @@ function buildPaginationMeta({ page, limit, total }) {
 }
 
 async function createPatient(data) {
+  if (!data.confirmDuplicate) {
+    const possibleDuplicate = await patientModel.findPotentialDuplicate({
+      fullName: data.fullName,
+      phone: data.phone,
+      dateOfBirth: data.dateOfBirth,
+    });
+
+    if (possibleDuplicate) {
+      const error = new AppError(
+        'A patient with the same name and phone number or date of birth already exists',
+        409
+      );
+      error.errors = [
+        {
+          field: 'duplicate',
+          message: 'Possible duplicate patient found',
+          existingPatientId: possibleDuplicate.id,
+          existingPatientCode: possibleDuplicate.patient_id,
+        },
+      ];
+      throw error;
+    }
+  }
+
+  const { confirmDuplicate, ...patientData } = data;
   const patient = await patientModel.createPatient({
-    ...data,
+    ...patientData,
     email: normalizeEmail(data.email),
   });
   return toPatientDto(patient);
